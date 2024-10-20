@@ -97,7 +97,7 @@ pipeline {
             steps {
                 script {
                     echo 'Scan image with trivy..'
-                    imageSecurityScan(env.IMAGE_NAME, env.IMAGE_TAG)
+                    imageSecurityScan(env.IMAGE_NAME, env.IMAGE_TAG, 'image.json')
                 }
             }
         }
