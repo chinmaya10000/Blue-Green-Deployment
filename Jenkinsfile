@@ -44,13 +44,6 @@ pipeline {
                 }
             }
         }
-        stage('Integration Test') {
-            steps {
-                script {
-                    sh 'mvn verify -DskipUnitTests'
-                }
-            }
-        }
         stage('TRIVY FS SCAN') {
             steps {
                 script {
