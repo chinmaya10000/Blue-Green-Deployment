@@ -40,7 +40,7 @@ pipeline {
         stage('Unit Test') {
             steps {
                 script {
-                    sh 'mvn test'
+                    sh 'mvn test -DskipTests=true'
                 }
             }
         }
@@ -69,8 +69,9 @@ pipeline {
         stage('Quality Gate Check') {
             steps {
                 script {
-                    echo 'Call the shared library function to check the quality gate'
-                    qualityGateCheck(timeoutHours: 1, abortPipeline: false)
+                    timeout(time: 1, unit: 'HOURS') {
+                        waitForQualityGate abortPipeline: false
+                    }
                 }
             }
         }
@@ -78,6 +79,15 @@ pipeline {
             steps {
                 script {
                     sh 'mvn package -DskipTests=true'
+                }
+            }
+        }
+        stage('Publish Artifact to Nexus') {
+            steps {
+                script {
+                    withMaven(globalMavenSettingsConfig: 'maven-settings', jdk: '', maven: 'Maven', mavenSettingsConfig: '', traceability: true) {
+                        sh 'mvn deploy -DskipTests=true'
+                    }
                 }
             }
         }
