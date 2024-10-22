@@ -1,7 +1,3 @@
-#!/usr/bin/env groovy
-
-@Library('jenkins-shared-library')_
-
 pipeline {
     agent any
 
@@ -26,10 +22,28 @@ pipeline {
         stage('Secret Scanning with Gitleaks') {
             steps {
                 script {
-                    gitleaksScan('.', 'gitleaks-report.json')
+                    try {
+                        // Run Gitleaks scan
+                        sh 'gitleaks detect --source=. -v --report-path=gitleaks-report.json'
+                        echo "Gitleaks scan completed successfully"
+                    }
+                    catch (Exception e) {
+                        echo "Gitleaks scan failed: ${e.message}"
+                        error("Gitleaks scanning stage failed")
+                    }
                 }
             }
         }
+        stage('SCA with OWASP Dependency-Check') {
+            steps {
+                script {
+                    echo "Running OWASP Dependency-Check..."
+                    dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                }
+            }
+        }
+
         stage('Compile') {
             steps {
                 script {
@@ -47,15 +61,16 @@ pipeline {
         stage('TRIVY FS SCAN') {
             steps {
                 script {
-                    scanCodebase()
+                    sh 'trivy fs --format table -o fs.json .'
                 }
             }
         }
-        stage('SonarQube Analysis') {
+        stage('SonarQube Analysis (SAST)') {
             steps {
                 script {
-                    echo 'Call the shared library function for SonarQube analysis'
-                    sonarQubeAnalysis('sonar-server', 'Multitier', 'Multitier')
+                    withSonarQubeEnv('sonar-server') {
+                        sh "$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectKey=multitier -Dsonar.projectName=multitier -Dsonar.java.binaries=target"
+                    }
                 }
             }
         }
@@ -87,9 +102,8 @@ pipeline {
         stage('Build Image') {
             steps {
                 script {
-                    // Call the shared library function to build the Docker image
                     echo 'building the docker image...'
-                    buildDockerImage(env.IMAGE_NAME, env.IMAGE_TAG)
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
                 }
             }
         }
@@ -97,7 +111,7 @@ pipeline {
             steps {
                 script {
                     echo 'Scan image with trivy..'
-                    imageSecurityScan(env.IMAGE_NAME, env.IMAGE_TAG, 'image.json')
+                    sh "trivy image --format table -o image.json ${IMAGE_NAME}:${IMAGE_TAG}"
                 }
             }
         }
@@ -105,7 +119,53 @@ pipeline {
             steps {
                 script {
                     echo 'Push Docker Image'
-                    pushDockerImage(env.IMAGE_NAME, env.IMAGE_TAG)
+                    withCredentials([usernamePassword(credentialsId: 'docker-credentials-id', passwordVariable: 'PASSWORD', usernameVariable: 'USER')]) {
+                        sh "echo $PASSWORD | docker login -u $USER --password-stdin"
+                        sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                    }
+                }
+            }
+        }
+        stage('Clone/Pull Repo') {
+            steps {
+                script {
+                    if(fileExists('gitops-argocd')) {
+
+                        echo 'Cloned repo already exists - Pulling latest changes'
+                        dir("gitops-argocd") {
+                            sh 'git pull'
+                        }
+                    } else {
+                        echo 'Repo does not exist - Cloning the Repo'
+                        sh 'git clone https://github.com/chinmaya10000/gitops-argocd.git'
+                    }
+                }
+            }
+        }
+        stage('Update Manifest') {
+            steps {
+                script {
+                    dir("gitops-argocd/Multi-Tier-BankApp/bankapp") {
+                        sh "sed -i 's#image: chinmayapradhan/.*#image: ${IMAGE_NAME}:${IMAGE_TAG}#g' bankapp.yaml"
+                        sh 'cat bankapp.yaml'
+                    }
+                }
+            }
+        }
+        stage('Commit and Push') {
+            steps {
+                script {
+                    echo 'Configure Git and push changes'
+                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                        sh '''
+                          git config --global user.name "chinmaya1000"
+                          git config --global user.email "chinmayapradhan10000@gmail.com"
+                          git remote set-url origin https://${GITHUB_TOKEN}@github.com/chinmaya10000/gitops-argocd.git
+                          git add .
+                          git commit -m "Updated image version for Build - $IMAGE_TAG"
+                          git push origin main
+                        '''
+                    }
                 }
             }
         }
