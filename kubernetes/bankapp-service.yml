@@ -10,4 +10,4 @@ spec:
     targetPort: 8080
   selector:
     app: bankapp
-    version: blue # This can be changed to "green" when switching traffic
+
