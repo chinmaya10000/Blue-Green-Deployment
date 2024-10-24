@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: bankapp
+  namespace: my-app
 spec:
   replicas: 2
   revisionHistoryLimit: 1

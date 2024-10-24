@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: bankapp-green
-  namespace: $APP_NAMESPACE
+  namespace: my-app
 spec:
   replicas: 1
   selector:

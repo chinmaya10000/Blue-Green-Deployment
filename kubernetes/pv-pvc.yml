@@ -9,20 +9,20 @@ spec:
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: gp2   # Standard EBS storage class for EKS
-  awsElasticBlockStore:
-    volumeID: "<your-ebs-volume-id>"  # Replace with your EBS volume ID
-    fsType: ext4
---- 
+  storageClassName: standard  # Minikube uses 'standard' by default
+  hostPath:                     # Using hostPath for local storage in Minikube
+    path: /mnt/data/mysql        # Path on the Minikube host machine
+    type: DirectoryOrCreate
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: mysql-pvc
-  namespace: $APP_NAMESPACE
+  namespace: my-app
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: gp2
+  storageClassName: standard
   resources:
     requests:
       storage: 5Gi

@@ -4,7 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mysql-deployment
-  namespace: $APP_NAMESPACE
+  namespace: my-app
 spec:
   selector:
     matchLabels:
@@ -53,7 +53,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mysql-service
-  namespace: $APP_NAMESPACE
+  namespace: my-app
 spec:
   ports:
   - port: 3306
