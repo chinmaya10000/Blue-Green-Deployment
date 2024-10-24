@@ -3,7 +3,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql
+  name: mysql-deployment
+  namespace: $APP_NAMESPACE
 spec:
   selector:
     matchLabels:
@@ -20,12 +21,21 @@ spec:
         name: mysql
         env:
         - name: MYSQL_ROOT_PASSWORD
-          value: "Test@123"
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: db_root_pwd
         - name: MYSQL_DATABASE
-          value: "bankappdb"
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: db_name
         ports:
         - containerPort: 3306
           name: mysql
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql  # MySQL data directory
         resources:
           requests:
             memory: "1Gi"
@@ -33,12 +43,17 @@ spec:
           limits:
             memory: "2Gi"
             cpu: "1000m"
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pvc
 ---
 # MySQL Service
 apiVersion: v1
 kind: Service
 metadata:
   name: mysql-service
+  namespace: $APP_NAMESPACE
 spec:
   ports:
   - port: 3306

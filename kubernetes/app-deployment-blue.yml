@@ -1,31 +1,39 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: bankapp-blue
+  name: bankapp
 spec:
-  replicas: 1
+  replicas: 2
+  revisionHistoryLimit: 1
   selector:
     matchLabels:
       app: bankapp
-      version: blue
   template:
     metadata:
       labels:
         app: bankapp
-        version: blue
     spec:
       containers:
       - name: bankapp
-        image: adijaiswal/bankapp:blue # Adjust the image tag for the blue version
+        image: adijaiswal/bankapp:v4
         ports:
         - containerPort: 8080
         env:
         - name: SPRING_DATASOURCE_URL
-          value: jdbc:mysql://mysql-service:3306/bankappdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+          valueFrom:
+            configMapKeyRef:
+              key: spring.datasource.url
+              name: db-config
         - name: SPRING_DATASOURCE_USERNAME
-          value: root
+          valueFrom:
+            secretKeyRef:
+              key: db_name
+              name: db-secret
         - name: SPRING_DATASOURCE_PASSWORD
-          value: Test@123
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: db_root_pwd
         resources:
           requests:
             memory: "500Mi"
