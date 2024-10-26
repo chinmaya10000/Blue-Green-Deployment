@@ -13,13 +13,6 @@ pipeline {
     }
 
     stages {
-        stage("Workspace cleanup"){
-            steps{
-                script{
-                    cleanWs()
-                }
-            }
-        }
         stage('Clone Repository') {
             steps {
                 script {
