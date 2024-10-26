@@ -35,10 +35,10 @@ pipeline {
                 }
             }
         }
-        stage('SCA with OWASP Dependency-Check') {
+        stage('Software Composition Analysis') {
             steps {
                 script {
-                    echo "Running OWASP Dependency-Check..."
+                    echo 'Software Composition Analysis'
                     dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
                     dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
                 }
