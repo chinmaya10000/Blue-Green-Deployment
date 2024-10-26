@@ -147,7 +147,6 @@ pipeline {
                 script {
                     dir("gitops-argocd/bankapp") {
                         sh "sed -i 's#image: chinmayapradhan/.*#image: ${IMAGE_NAME}:${IMAGE_TAG}#g' bankapp.yml"
-                        sh 'cat bankapp.yaml'
                     }
                 }
             }
