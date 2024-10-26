@@ -9,9 +9,17 @@ pipeline {
         IMAGE_NAME = 'chinmayapradhan/bankapp'
         IMAGE_TAG = "${env.BUILD_NUMBER}"
         SCANNER_HOME = tool 'sonar-scanner'
+        GITHUB_TOKEN = credentials('github')
     }
 
     stages {
+        stage("Workspace cleanup"){
+            steps{
+                script{
+                    cleanWs()
+                }
+            }
+        }
         stage('Clone Repository') {
             steps {
                 script {
@@ -154,16 +162,13 @@ pipeline {
         stage('Commit and Push') {
             steps {
                 script {
-                    echo 'Configure Git and push changes'
-                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                        sh '''
-                          git config --global user.name "chinmaya1000"
-                          git config --global user.email "chinmayapradhan10000@gmail.com"
-                          git remote set-url origin https://${GITHUB_TOKEN}@github.com/chinmaya10000/gitops-argocd.git
-                          git add .
-                          git commit -m "Updated image version for Build - $IMAGE_TAG"
-                          git push origin main
-                        '''
+                    dir('gitops-argocd/bankapp') {
+                        sh 'git config --global user.email "jenkins@ci.com"'
+                        sh 'git config --global user.name "jenkins"'
+                        sh "git remote set-url origin https://${GITHUB_TOKEN}@github.com/chinmaya10000/gitops-argocd.git"
+                        sh 'git add .'
+                        sh 'git commit -m "Updated image version for Build - $IMAGE_TAG"'
+                        sh 'git push origin main'
                     }
                 }
             }
