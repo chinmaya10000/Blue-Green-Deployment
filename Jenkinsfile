@@ -145,8 +145,8 @@ pipeline {
         stage('Update Manifest') {
             steps {
                 script {
-                    dir("gitops-argocd/Multi-Tier-BankApp/bankapp") {
-                        sh "sed -i 's#image: chinmayapradhan/.*#image: ${IMAGE_NAME}:${IMAGE_TAG}#g' bankapp.yaml"
+                    dir("gitops-argocd/bankapp") {
+                        sh "sed -i 's#image: chinmayapradhan/.*#image: ${IMAGE_NAME}:${IMAGE_TAG}#g' bankapp.yml"
                         sh 'cat bankapp.yaml'
                     }
                 }
