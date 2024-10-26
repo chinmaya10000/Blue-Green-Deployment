@@ -15,7 +15,7 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 script {
-                    cloneRepo("https://github.com/chinmaya10000/Blue-Green-Deployment.git", "feature/devsecops")
+                    git branch: 'feature/devsecops', url: 'https://github.com/chinmaya10000/Blue-Green-Deployment.git'
                 }
             }
         }
