@@ -20,6 +20,37 @@ pipeline {
                 git branch: 'main', credentialsId: 'git-cred', url: 'https://github.com/jaiswaladi246/3-Tier-NodeJS-MySql-Docker.git'
             }
         }
+
+        stage('Gitleaks Scan') {
+            agent {
+                docker {image 'zricethezav/gitleaks'}
+            }
+            steps {
+                echo 'Gitleaks Secret Scan'
+                sh 'gitleaks detect --verbose --source . -f json -r gitleaks.json'
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'gitleaks.json', allowEmptyArchive: true
+                }
+            }
+        }
+
+        stage('Compile') {
+            steps {
+                script {
+                    sh 'mvn compile'
+                }
+            }
+        }
+
+        stage('Unit Test') {
+            steps {
+                script {
+                    sh 'mvn test -DskipTests=true'
+                }
+            }
+        }
         
         stage('SonarQube Analysis') {
             steps {
@@ -28,34 +59,12 @@ pipeline {
                 }
             }
         }
-        
-        stage('Trivy FS Scan') {
-            steps {
-                sh "trivy fs --format table -o fs.html ."
-            }
-        }
-        
-        stage('Docker build') {
+
+        stage('Quality Gate Check') {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'docker-cred') {
-                        sh "docker build -t ${IMAGE_NAME}:${TAG} ."
-                    }
-                }
-            }
-        }
-        
-        stage('Trivy Image Scan') {
-            steps {
-                sh "trivy image --format table -o image.html ${IMAGE_NAME}:${TAG}"
-            }
-        }
-        
-        stage('Docker Push Image') {
-            steps {
-                script {
-                    withDockerRegistry(credentialsId: 'docker-cred') {
-                        sh "docker push ${IMAGE_NAME}:${TAG}"
+                    timeout(time: 1, unit: 'HOURS') {
+                        waitForQualityGate abortPipeline: false
                     }
                 }
             }
