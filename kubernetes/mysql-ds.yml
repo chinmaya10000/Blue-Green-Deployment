@@ -1,16 +1,16 @@
 ---
 # MySQL Deployment with Resource Requests
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: mysql-deployment
   namespace: my-app
 spec:
+  replicas: 3
+  serviceName: mysql
   selector:
     matchLabels:
       app: mysql
-  strategy:
-    type: Recreate
   template:
     metadata:
       labels:
@@ -55,6 +55,7 @@ metadata:
   name: mysql-service
   namespace: my-app
 spec:
+  clusterIP: None
   ports:
   - port: 3306
   selector:

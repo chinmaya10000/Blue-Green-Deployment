@@ -5,30 +5,30 @@ metadata:
   namespace: my-app
 spec:
   replicas: 2
-  revisionHistoryLimit: 1
   selector:
     matchLabels:
       app: bankapp
+      version: v1
   template:
     metadata:
+      name: bankapp
       labels:
         app: bankapp
+        version: v1 
     spec:
       containers:
       - name: bankapp
-        image: adijaiswal/bankapp:v4
+        image: chinmayapradhan/bankapp:4
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
         env:
         - name: SPRING_DATASOURCE_URL
-          valueFrom:
-            configMapKeyRef:
-              key: spring.datasource.url
-              name: db-config
+          value: jdbc:mysql://mysql-service:3306/bankappdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
         - name: SPRING_DATASOURCE_USERNAME
           valueFrom:
             secretKeyRef:
-              key: db_name
+              key: db_user
               name: db-secret
         - name: SPRING_DATASOURCE_PASSWORD
           valueFrom:
