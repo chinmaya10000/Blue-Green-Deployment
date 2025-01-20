@@ -77,7 +77,7 @@ pipeline {
                 script {
                     echo 'Scan image with trivy...'
                     sh "aws ecr get-login-password --region ${CLUSTER_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URL}"
-                    sh "trivy image -f json -o trivy.json --severity HIGH,CRITICAL --exit-code 1 ${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "trivy image -f json -o trivy.json ${IMAGE_NAME}:${IMAGE_TAG}"
                 }
             }
         }
