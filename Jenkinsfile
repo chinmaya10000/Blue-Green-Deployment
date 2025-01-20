@@ -27,11 +27,11 @@ pipeline {
                 }
             }
         }
-        stage('Build App') {
+        stage('Compile') {
             steps {
                 script {
                     echo 'Building the application ...'
-                    sh 'mvn clean package -DskipTests=true'
+                    sh 'mvn compile'
                 }
             }
         }
@@ -42,6 +42,13 @@ pipeline {
                     withSonarQubeEnv('sonar-server') {
                         sh "$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectKey=multitier -Dsonar.projectName=multitier -Dsonar.java.binaries=target"
                     }
+                }
+            }
+        }
+        stage('build') {
+            steps {
+                script {
+                    sh 'mvn package -DskipTests=true'
                 }
             }
         }
