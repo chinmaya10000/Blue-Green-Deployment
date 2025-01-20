@@ -1,197 +1,119 @@
+#!/usr/bin/env groovy
+
 pipeline {
+
     agent any
     tools {
         maven 'Maven'
     }
-    
-    parameters {
-        choice(name: 'DEPLOY_ENV', choices: ['blue', 'green'], description: 'Choose which environment to deploy: Blue or Green')
-        choice(name: 'DOCKER_TAG', choices: ['blue', 'green'], description: 'Choose the Docker image tag for the deployment')
-        booleanParam(name: 'SWITCH_TRAFFIC', defaultValue: false, description: 'Switch traffic between Blue and Green')
-    }
-    
+
     environment {
-        IMAGE_NAME = "chinmayapradhan/bankapp"
-        TAG = "${params.DOCKER_TAG}"  // The image tag now comes from the parameter
-        KUBE_NAMESPACE = 'webapps'
-        SCANNER_HOME= tool 'sonar-scanner'
+        ECR_REPO_URL = '156041433917.dkr.ecr.us-east-2.amazonaws.com'
+        IMAGE_NAME = '${ECR_REPO_URL}/bank-app'
+        IMAGE_TAG = "1.0-${BUILD_NUMBER}"
+        SCANNER_HOME = tool 'sonar-scanner'
+        CLUSTER_NAME = 'myapp-eks'
+        CLUSTER_REGION = 'us-east-2'
+        AWS_ACCESS_KEY_ID = credentials('jenkins_aws_access_key_id')
+        AWS_SECRET_ACCESS_KEY = credentials('jenkins_aws_secret_access_key')
     }
 
     stages {
-        stage('Git Checkout') {
+        stage('Checkout') {
             steps {
                 script {
-                    git branch: 'main', url: 'https://github.com/chinmaya10000/Blue-Green-Deployment.git'
+                    echo 'Checking out code...'
+                    git branch: 'feature/deploy-on-eks', url: 'https://github.com/chinmaya10000/Blue-Green-Deployment.git'
                 }
             }
         }
-
-        stage('Secret Scanning with Gitleaks') {
+        stage('Build App') {
             steps {
                 script {
-                    try {
-                        // Run Gitleaks scan
-                        sh 'gitleaks detect --source=. -v --report-path=gitleaks-report.json'
-                        echo "Gitleaks scan completed successfully"
-                    }
-                    catch (Exception e) {
-                        echo "Gitleaks scan failed: ${e.message}"
-                        error("Gitleaks scanning stage failed")
-                    }
+                    echo 'Building the application ...'
+                    sh 'mvn clean package'
                 }
             }
         }
-
-        stage('Compile') {
+        stage('Unit Tests and Code Coverage') {
             steps {
                 script {
-                    sh 'mvn compile'
+                    echo 'Running unit tests and generating code coverage report...'
+                    sh 'mvn test jacoco:report'
                 }
             }
         }
-
-        stage('Unit Test') {
+        stage('Publish Code Coverage Report') {
             steps {
                 script {
-                    sh 'mvn test -DskipTests=true'
+                    echo 'Publishing JaCoCo code coverage report...'
+                    jacoco execPattern: '**/target/jacoco.exec', classPattern: '**/target/classes', sourcePattern: '**/src/main/java', exclusionPattern: ''
                 }
             }
         }
-        
-        stage('SonarQube Analysis') {
+        stage('Code Analysis') {
             steps {
-                withSonarQubeEnv('sonar-server') {
+                script {
+                    echo 'Running code analysis with SonarQube...'
+                    withSonarQubeEnv('sonar-server') {
                         sh "$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectKey=multitier -Dsonar.projectName=multitier -Dsonar.java.binaries=target"
                     }
-            }
-        }
-
-        stage('Quality Gate Check') {
-            steps {
-                script {
-                    timeout(time: 1, unit: 'HOURS') {
-                        waitForQualityGate abortPipeline: false
-                    }
                 }
             }
         }
-
-        stage('Build') {
-            steps {
-                script {
-                    sh 'mvn package -DskipTests=true'
-                }
-            }
-        }
-
         stage('Publish Artifact to Nexus') {
             steps {
                 script {
-                    withMaven(globalMavenSettingsConfig: 'maven-settings', jdk: '', maven: 'Maven', mavenSettingsConfig: '', traceability: true) {
-                        sh 'mvn deploy -DskipTests=true'
-                    }
+                    echo 'push to nexus'
                 }
             }
         }
-
-        stage('Build Image') {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'docker-cred') {
-                        sh "docker build -t ${IMAGE_NAME}:${TAG} ."
-                    }
+                    echo "building the docker image..."
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                    sh "aws ecr get-login-password --region ${CLUSTER_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URL}"
+                    sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
                 }
             }
         }
-
         stage('Image Security Scan') {
             steps {
                 script {
                     echo 'Scan image with trivy...'
-                    sh "trivy image -f json -o trivy.json --severity HIGH,CRITICAL --exit-code 1 ${IMAGE_NAME}:${TAG}"
+                    sh "aws ecr get-login-password --region ${CLUSTER_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URL}"
+                    sh "trivy image -f json -o trivy.json --severity HIGH,CRITICAL --exit-code 1 ${IMAGE_NAME}:${IMAGE_TAG}"
                 }
             }
         }
-
-        stage('Docker Push Image') {
-            steps {
-                script {
-                    withDockerRegistry(credentialsId: 'docker-cred') {
-                        sh "docker push ${IMAGE_NAME}:${TAG}"
-                    }
-                }
-            }
-        }
-
-        stage('Deploy mySQL') {
-            steps {
-                script {
-                    withKubeConfig(caCertificate: '', clusterName: 'my-cluster', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', restrictKubeConfigAccess: false, serverUrl: 'https://66F00F4083B8F637D1F900C8A856AADC.gr7.us-east-2.eks.amazonaws.com') {
-                        sh "kubectl apply -f mysql-ds.yml -n ${KUBE_NAMESPACE}"  // Ensure you have the MySQL deployment YAML ready
-                    }
-                }
-            }
-        }
-
-        stage('Deploy SVC-App') {
-            steps {
-                script {
-                    withKubeConfig(caCertificate: '', clusterName: 'my-cluster', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', restrictKubeConfigAccess: false, serverUrl: 'https://66F00F4083B8F637D1F900C8A856AADC.gr7.us-east-2.eks.amazonaws.com') {
-                        sh """ if ! kubectl get svc bankapp-service -n ${KUBE_NAMESPACE}; then
-                                kubectl apply -f bankapp-service.yml -n ${KUBE_NAMESPACE}
-                              fi
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Deploy to EKS') {
-            steps {
-                script {
-                    def deploymentFile = ""
-                    if (params.DEPLOY_ENV == 'blue') {
-                        deploymentFile = 'app-deployment-blue.yml'
-                    } else {
-                        deploymentFile = 'app-deployment-green.yml'
-                    }
-
-                    withKubeConfig(caCertificate: '', clusterName: 'my-cluster', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', restrictKubeConfigAccess: false, serverUrl: 'https://66F00F4083B8F637D1F900C8A856AADC.gr7.us-east-2.eks.amazonaws.com') {
-                        sh "kubectl apply -f ${deploymentFile} -n ${KUBE_NAMESPACE}"
-                    }
-                }
-            }
-        }
-
-        stage('Switch Traffic Between Blue & Green Environment') {
-            when {
-                expression { return params.SWITCH_TRAFFIC }
+        stage('Deploy To EKS') {
+            environment {
+                APP_NAME = 'bankapp'
+                APP_NAMESPACE = 'bankapp'
+                // Note: credentials helper function only works in the environment block
+                DB_USER_SECRET = credentials('db_user')
+                DB_NAME_SECRET = credentials('db_name')
+                DB_ROOT_PASS_SECRET = credentials('db_root_pass')
             }
             steps {
                 script {
-                    def newEnv = params.DEPLOY_ENV
+                    // configure kubeconfig context to access the cluster with kubectl - alternative to copying the kubeconfig file to Jenkins server manually
+                    sh "aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${CLUSTER_REGION}"
 
-                    // Always switch traffic based on DEPLOY_ENV
-                    withKubeConfig(caCertificate: '', clusterName: 'my-cluster', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', restrictKubeConfigAccess: false, serverUrl: 'https://66F00F4083B8F637D1F900C8A856AADC.gr7.us-east-2.eks.amazonaws.com') {
-                        sh '''
-                            kubectl patch service bankapp-service -p "{\\"spec\\": {\\"selector\\": {\\"app\\": \\"bankapp\\", \\"version\\": \\"''' + newEnv + '''\\"}}}" -n ${KUBE_NAMESPACE}
-                        '''
-                    }
-                    echo "Traffic has been switched to the ${newEnv} environment."
-                }
-            }
-        }
+                    // set env variables for db-secret.yaml, using Jenkins credentials of "secret text" credentials type
+                    env.DB_ROOT_PASS = sh(script: 'echo -n $DB_ROOT_PASS_SECRET | base64', returnStdout: true).trim()
+                    env.DB_NAME = sh(script: 'echo -n $DB_NAME_SECRET | base64', returnStdout: true).trim()
+                    env.DB_USER = sh(script: 'echo -n $DB_USER_SECRET | base64', returnStdout: true).trim()
 
-        stage('Verify deployment') {
-            steps {
-                script {
-                    def verifyEnv = params.DEPLOY_ENV
-                    withKubeConfig(caCertificate: '', clusterName: 'my-cluster', contextName: '', credentialsId: 'k8s-token', namespace: 'webapps', restrictKubeConfigAccess: false, serverUrl: 'https://66F00F4083B8F637D1F900C8A856AADC.gr7.us-east-2.eks.amazonaws.com') {
-                        sh """
-                        kubectl get pods -l version=${verifyEnv} -n ${KUBE_NAMESPACE}
-                        kubectl get svc bankapp-service -n ${KUBE_NAMESPACE}
-                        """
-                    }
+                    // Note the correct usage of secret credentials in script: https://www.jenkins.io/doc/book/pipeline/jenkinsfile/#interpolation-of-sensitive-environment-variables
+                    // Wrong: script: "echo -n ${DB_PASS_SECRET} | base64"
+                    // Correct: script: 'echo -n $DB_PASS_SECRET | base64'
+
+                    echo 'deploying new release to EKS...'
+                    sh 'envsubst < k8s-deployment/db-config-cicd.yaml | kubectl apply -f -'
+                    sh 'envsubst < k8s-deployment/db-secret-cicd.yaml | kubectl apply -f -'
+                    sh 'envsubst < k8s-deployment/java-app-cicd.yaml | kubectl apply -f -'
                 }
             }
         }

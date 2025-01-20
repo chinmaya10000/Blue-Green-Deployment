@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $APP_NAME-deployment
+  namespace: $APP_NAMESPACE
+  labels:
+    app: $APP_NAME
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: $APP_NAME
+  template:
+    metadata:
+      labels:
+        app: $APP_NAME
+    spec:
+      imagePullSecrets:
+      - name: my-ecr-registry-key
+      containers:
+      - name: $APP_NAME
+        image: ${IMAGE_NAME}:${IMAGE_TAG}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_DATASOURCE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: db-config
+              key: db_server
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              key: mysql-user
+              name: db-secret
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: mysql-root-password
+              name: db-secret
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+--- 
+apiVersion: v1
+kind: Service
+metadata:
+  name: $APP_NAME
+  namespace: $APP_NAMESPACE
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: external
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+spec:
+  selector:
+    app: $APP_NAME
+  ports:
+  - port: 80
+    targetPort: 8080 
+

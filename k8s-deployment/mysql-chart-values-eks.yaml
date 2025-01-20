@@ -1,0 +1,25 @@
+architecture: replication
+auth:
+  rootPassword: Test@123
+  database: bankappdb
+
+# Enable init container that changes the owner and group of the persistent volume mountpoint to runAsUser:fsGroup
+volumePermissions:
+  enabled: true
+
+primary:
+  persistence:
+    enabled: false
+
+secondary:
+  # 1 primary and 2 secondary replicas
+  replicaCount: 2
+  persistence:
+    enabled: true # Must be true to persist data across pods
+    size: 8Gi # Specify the volume size
+    storageClass: gp2 # Storage class for EKS volumes
+    accessModes:
+      - ReadWriteOnce # Correct access mode for gp2 volumes
+
+
+# helm install mysql-release bitnami/mysql -f values.yml -n bankapp
