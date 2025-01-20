@@ -12,7 +12,7 @@ pipeline {
         IMAGE_NAME = '${ECR_REPO_URL}/bank-app'
         IMAGE_TAG = "1.0-${BUILD_NUMBER}"
         SCANNER_HOME = tool 'sonar-scanner'
-        CLUSTER_NAME = 'myapp-eks'
+        CLUSTER_NAME = 'staging-myapp-eks'
         CLUSTER_REGION = 'us-east-2'
         AWS_ACCESS_KEY_ID = credentials('jenkins_aws_access_key_id')
         AWS_SECRET_ACCESS_KEY = credentials('jenkins_aws_secret_access_key')
