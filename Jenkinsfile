@@ -9,7 +9,7 @@ pipeline {
 
     environment {
         ECR_REPO_URL = '156041433917.dkr.ecr.us-east-2.amazonaws.com'
-        IMAGE_NAME = '${ECR_REPO_URL}/bank-app'
+        IMAGE_NAME = "${ECR_REPO_URL}/bank-app"
         IMAGE_TAG = "1.0-${BUILD_NUMBER}"
         SCANNER_HOME = tool 'sonar-scanner'
         CLUSTER_NAME = 'staging-myapp-eks'
