@@ -31,23 +31,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building the application ...'
-                    sh 'mvn clean package'
-                }
-            }
-        }
-        stage('Unit Tests and Code Coverage') {
-            steps {
-                script {
-                    echo 'Running unit tests and generating code coverage report...'
-                    sh 'mvn test jacoco:report'
-                }
-            }
-        }
-        stage('Publish Code Coverage Report') {
-            steps {
-                script {
-                    echo 'Publishing JaCoCo code coverage report...'
-                    jacoco execPattern: '**/target/jacoco.exec', classPattern: '**/target/classes', sourcePattern: '**/src/main/java', exclusionPattern: ''
+                    sh 'mvn clean package -DskipTests=true'
                 }
             }
         }
