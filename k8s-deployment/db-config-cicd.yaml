@@ -4,4 +4,4 @@ metadata:
   name: db-config
   namespace: $APP_NAMESPACE
 data:
-  db_server: jdbc:mysql://mysql-release-mysql.bankapp.svc.cluster.local:3306/bankappdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+  db_server: jdbc:mysql://mysql-release-primary.bankapp.svc.cluster.local:3306/bankappdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC

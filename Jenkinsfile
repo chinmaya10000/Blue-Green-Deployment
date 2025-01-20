@@ -65,6 +65,9 @@ pipeline {
             steps {
                 script {
                     echo 'push to nexus'
+                    withMaven(globalMavenSettingsConfig: 'maven-settings', jdk: '', maven: 'Maven', mavenSettingsConfig: '', traceability: true) {
+                       sh 'mvn deploy -DskipTests=true'
+                    }
                 }
             }
         }
