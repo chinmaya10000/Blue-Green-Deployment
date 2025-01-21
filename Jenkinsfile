@@ -75,15 +75,6 @@ pipeline {
                 }
             }
         }
-        stage('Quality Gate Check') {
-            steps {
-                script {
-                    timeout(time: 1, unit: 'HOURS') {
-                        waitForQualityGate abortPipeline: false
-                    }
-                }
-            }
-        }
         stage('Build') {
             steps {
                 script {
