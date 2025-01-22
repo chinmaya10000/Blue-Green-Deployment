@@ -75,6 +75,24 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>8.2.1</version> <!-- Ensure this is the latest version -->
+				<executions>
+					<execution>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<!-- Set thresholds for build failure -->
+					<failBuildOnCVSS>7</failBuildOnCVSS> <!-- Fails on vulnerabilities with CVSS >= 7 -->
+					<format>ALL</format> <!-- Generates multiple report formats -->
+					<outputDirectory>${project.build.directory}</outputDirectory> <!-- Location for reports -->
+				</configuration>
+			</plugin>
 		</plugins>
 
 	
