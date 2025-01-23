@@ -114,7 +114,7 @@ pipeline {
                         }
                     } else {
                         echo 'Repo does not exists - Cloning the repo'
-                        sh 'git clone https://github.com/chinmaya10000/gitops-argocd.git'
+                        sh 'git clone -b feature/gitops-argocd https://github.com/chinmaya10000/gitops-argocd.git'
                     }
                 }
             }
