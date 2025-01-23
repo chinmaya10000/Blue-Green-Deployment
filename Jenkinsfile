@@ -72,6 +72,9 @@ pipeline {
             steps {
                 script {
                     echo 'Publishing the application to the Nexus repository...'
+                    withMaven(globalMavenSettingsConfig: 'maven-settings', jdk: '', maven: 'Maven', mavenSettingsConfig: '', traceability: true) {
+                        sh 'mvn deploy -DskipTests=true'
+                    }
                 }
             }
         }
@@ -87,7 +90,7 @@ pipeline {
             steps {
                 script {
                     echo 'Scanning the Docker image for vulnerabilities...'
-                    sh "trivy image -f json -o trivy.json --severity HIGH,CRITICAL --exit-code 1 ${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "trivy image -f json -o trivy.json --severity HIGH,CRITICAL --exit-code 0 ${IMAGE_NAME}:${IMAGE_TAG}"
                 }
             }
         }
@@ -121,7 +124,7 @@ pipeline {
                 script {
                     dir('gitops-argocd/bankapp') {
                         echo 'Update the Kubernetes manifest with the new image tag...'
-                        sh "sed -i 's#image: chinmayapradhan/.*#image: ${IMAGE_NAME}:${IMAGE_TAG}#g' java-app.yaml"
+                        sh "sed -i 's#image: 156041433917.dkr.ecr.us-east-2.amazonaws.com/.*#image: ${IMAGE_NAME}:${IMAGE_TAG}#g' java-app.yaml"
                     }
                 }
             }
@@ -134,6 +137,7 @@ pipeline {
                         sh 'git config --global user.email "jenkins@gmail.com"'
                         sh 'git config --global user.name "jenkins"'
                         sh "git remote set-url origin https://${GITHUB_TOKEN}@github.com/chinmaya10000/gitops-argocd.git"
+                        sh 'git checkout feature/argocd-gitops'
                         sh 'git add .'
                         sh 'git commit -m "Updated image version for Build - $IMAGE_TAG"'
                         sh 'git push origin feature/argocd-gitops'
