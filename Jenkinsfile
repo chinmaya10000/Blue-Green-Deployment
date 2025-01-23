@@ -8,7 +8,7 @@ pipeline {
     }
 
     environment {
-        ECR_REPO_URL = ''
+        ECR_REPO_URL = '156041433917.dkr.ecr.us-east-2.amazonaws.com'
         IMAGE_NAME = "${ECR_REPO_URL}/bank-app"
         IMAGE_TAG = "1.0-${BUILD_NUMBER}" // Build-specific tag
         SCANNER_HOME = tool 'sonar-scanner'
