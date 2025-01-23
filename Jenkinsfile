@@ -124,7 +124,7 @@ pipeline {
                 script {
                     dir('gitops-argocd/bankapp') {
                         echo 'Update the Kubernetes manifest with the new image tag...'
-                        sh "sed -i 's#image: 156041433917.dkr.ecr.us-east-2.amazonaws.com/.*#image: ${IMAGE_NAME}:${IMAGE_TAG}#g' java-app.yml"
+                        sh "sed -i 's#image: 156041433917.dkr.ecr.us-east-2.amazonaws.com/.*#image: ${IMAGE_NAME}:${IMAGE_TAG}#g' java-app.yaml"
                     }
                 }
             }
