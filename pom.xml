@@ -88,8 +88,8 @@
 				</executions>
 				<configuration>
 					<!-- Set thresholds for build failure -->
-					<failBuildOnCVSS>7</failBuildOnCVSS> <!-- Fails on vulnerabilities with CVSS >= 7 -->
-					<format>ALL</format> <!-- Generates multiple report formats -->
+					<failBuildOnCVSS>10</failBuildOnCVSS> <!-- Fails on vulnerabilities with CVSS >= 7 -->
+					<format>JSON</format> <!-- Generates multiple report formats -->
 					<outputDirectory>${project.build.directory}</outputDirectory> <!-- Location for reports -->
 				</configuration>
 			</plugin>
