@@ -1,0 +1,47 @@
+appName: java-app
+appReplicas: 2
+registrySecret: my-ecr-registry-key
+appContainerName: bankapp
+appImage: 156041433917.dkr.ecr.us-east-2.amazonaws.com/bankapp
+appVersion: 1.0-2
+containerPort: 8080
+
+servicePort: 80
+
+configName: db-config
+configData:
+   DB_SERVER: jdbc:mysql://mysql-release-primary.bankapp.svc.cluster.local:3306/bankappdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+
+secretName: db-secret
+secretData:
+   DB_USER: root 
+   DB_NAME: bankappdb
+   MYSQL_ROOT_PASSWORD: Test@123
+
+regularData: {}
+
+resources:
+  requests:
+   cpu: "250m"
+   memory: "512Mi"
+  limits:
+   cpu: "500m"
+   memory: "1Gi"
+
+ingress:
+  hostName: myapp.example.com
+  pathType: Prefix
+  path: /
+
+hpa:
+  minReplicas: 2
+  maxReplicas: 10
+  cpuUtilization: 50
+  memoryUtilization: 70
+
+
+
+
+# helm lint -f values.yaml java-app
+# helm template -f my-java-app values.yaml java-app
+# helm install my-cool-java-app java-app -f java-app/values.yaml --dry-run --debug

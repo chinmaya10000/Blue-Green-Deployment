@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ Values.appName }}-deployment
+  namespace: bankapp
+  labels:
+    app: {{ Values.appName }}
+spec:
+  replicas: {{ .Values.appReplicas }}
+  selector:
+    matchLabels:
+      app: {{ Values.appName }}
+  template:
+    metadata:
+      labels:
+        app: {{ Values.appName }}
+    spec:
+      imagePullSecrets:
+      - name: {{ .Values.registrySecret }}
+      containers:
+      - name: {{ .Values.appContainerName }}
+        image: "{{ .Values.appImage }}:{{ .Values.appVersion }}"
+        ports:
+        - containerPort: {{ .Values.containerPort }}
+        env:
+        {{- range $key, $value := .Values.regularData }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end}}
+
+        {{- range $key, $value := .Values.secretData}}
+        - name: {{ $key }}
+          valueFrom:
+            secretKeyRef:
+              # in loop, we lose global context, but can access global context with $
+              # $ is 1 variable that is always global and will always point to the root context
+              # so $.Value instead of .Values
+              name: {{ $.Values.secretName }}
+              key: {{ $key }}
+        {{- end}}
+
+        {{- range $key, $value := .Values.configData}}
+        - name: {{ $key }}
+          valueFrom:
+            configMapKeyRef:
+              name: {{ $.Values.configName }}
+              key: {{ $key }}
+        {{- end}}
+
+        resources:
+          requests:
+            memory: {{ .Values.resources.requests.memory }}
+            cpu: {{ .Values.resources.requests.cpu }}
+          limits:
+            memory: {{ .Values.resources.limits.memory }}
+            cpu: {{ .Values.resources.limits.cpu }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ Values.appName }}-service
+  namespace: bankapp
+spec:
+  selector:
+    app: {{ Values.appName }}
+  ports:
+  - port: {{ .Values.servicePort }}
+    targetPort: {{ .Values.containerPort }}
+
