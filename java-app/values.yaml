@@ -42,5 +42,7 @@ hpa:
 
 
 # helm lint -f values.yaml <chart-directory>
-# helm template -f my-java-app values.yaml java-app
-# helm install my-cool-java-app java-app -f java-app/values.yaml --dry-run --debug
+# helm template <release-name> <chart-directory>
+# helm template <release-name> <chart-directory> --dry-run --debug
+# helm install my-release . -n bankapp
+# helm uninstall my-release -n bankapp
