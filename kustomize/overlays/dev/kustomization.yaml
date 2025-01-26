@@ -19,3 +19,4 @@ secretGenerator:
 
 
 # kubectl apply -k overlays/dev
+# kubectl delete -k overlays/dev
