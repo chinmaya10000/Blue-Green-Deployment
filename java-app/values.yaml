@@ -10,13 +10,12 @@ servicePort: 80
 
 configName: db-config
 configData:
-   DB_SERVER: jdbc:mysql://mysql-release-primary.bankapp.svc.cluster.local:3306/bankappdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+   SPRING_DATASOURCE_URL: jdbc:mysql://mysql-release-primary.bankapp.svc.cluster.local:3306/bankappdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
 
 secretName: db-secret
 secretData:
-   DB_USER: root 
-   DB_NAME: bankappdb
-   MYSQL_ROOT_PASSWORD: Test@123
+   SPRING_DATASOURCE_USERNAME: root 
+   SPRING_DATASOURCE_PASSWORD: Test@123
 
 regularData: {}
 
@@ -42,6 +41,6 @@ hpa:
 
 
 
-# helm lint -f values.yaml java-app
+# helm lint -f values.yaml <chart-directory>
 # helm template -f my-java-app values.yaml java-app
 # helm install my-cool-java-app java-app -f java-app/values.yaml --dry-run --debug

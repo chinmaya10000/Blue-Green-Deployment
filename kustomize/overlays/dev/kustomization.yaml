@@ -13,7 +13,7 @@ secretGenerator:
   - name: db-secret
     literals:
       - db_root_pwd=Test@123
-      - db_name=bankappdb
+      # - db_name=bankappdb
       - db_user=root
 
 
