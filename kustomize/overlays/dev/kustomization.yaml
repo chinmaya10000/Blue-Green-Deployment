@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: bankapp
+resources:
+  - ../../base
+
+configMapGenerator:
+  - name: db-config
+    literals:
+      - db_server=jdbc:mysql://mysql-release-primary.bankapp.svc.cluster.local:3306/bankappdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+
+secretGenerator:
+  - name: db-secret
+    literals:
+      - db_root_pwd=Test@123
+      - db_name=bankappdb
+      - db_user=root
+
+
+
+# kubectl apply -k overlays/dev

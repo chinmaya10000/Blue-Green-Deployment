@@ -2,8 +2,8 @@ appName: java-app
 appReplicas: 2
 registrySecret: my-ecr-registry-key
 appContainerName: bankapp
-appImage: 156041433917.dkr.ecr.us-east-2.amazonaws.com/bankapp
-appVersion: 1.0-2
+appImage: 156041433917.dkr.ecr.us-east-2.amazonaws.com/bank-app
+appVersion: 1.0-1
 containerPort: 8080
 
 servicePort: 80
