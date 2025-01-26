@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ Values.configName }}
+  name: {{ .Values.configName }}
   namespace: bankapp
 data:
   {{- range $key, $value := .Values.configData}}

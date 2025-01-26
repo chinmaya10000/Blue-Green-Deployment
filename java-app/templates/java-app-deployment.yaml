@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ Values.appName }}-deployment
+  name: {{ .Values.appName }}-deployment
   namespace: bankapp
   labels:
-    app: {{ Values.appName }}
+    app: {{ .Values.appName }}
 spec:
   replicas: {{ .Values.appReplicas }}
   selector:
     matchLabels:
-      app: {{ Values.appName }}
+      app: {{ .Values.appName }}
   template:
     metadata:
       labels:
-        app: {{ Values.appName }}
+        app: {{ .Values.appName }}
     spec:
       imagePullSecrets:
       - name: {{ .Values.registrySecret }}
@@ -58,11 +58,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ Values.appName }}-service
+  name: {{ .Values.appName }}-service
   namespace: bankapp
 spec:
   selector:
-    app: {{ Values.appName }}
+    app: {{ .Values.appName }}
   ports:
   - port: {{ .Values.servicePort }}
     targetPort: {{ .Values.containerPort }}
