@@ -29,7 +29,7 @@ resources:
    memory: "1Gi"
 
 ingress:
-  hostName: myapp.example.com
+  hostName: k8s-ingress-external-2a207f3bfd-3a02567c3e8e2c24.elb.us-east-2.amazonaws.com
   pathType: Prefix
   path: /
 

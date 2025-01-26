@@ -5,7 +5,7 @@ metadata:
 spec:
   ingressClassName: external-nginx
   rules:
-  - host: java-app.example.com
+  - host: k8s-ingress-external-2a207f3bfd-3a02567c3e8e2c24.elb.us-east-2.amazonaws.com
     http:
       paths:
       - pathType: Prefix
