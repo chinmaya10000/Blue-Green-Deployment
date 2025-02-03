@@ -23,3 +23,5 @@ secondary:
 
 
 # helm install mysql-release bitnami/mysql -f mysql-chart-values-eks.yaml -n bankapp
+# kubectl get pods -n <namespace> -o wide
+# kubectl exec -it mysql-release-primary-0 -n <namespace> -- /bin/sh
