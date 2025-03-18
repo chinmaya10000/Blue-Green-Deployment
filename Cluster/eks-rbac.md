@@ -21,38 +21,23 @@ metadata:
   name: app-role
   namespace: webapps
 rules:
-  - apiGroups:
-        - ""
-        - apps
-        - autoscaling
-        - batch
-        - extensions
-        - policy
-        - rbac.authorization.k8s.io
-    resources:
-      - pods
+  - apiGroups: [""]
+    resources: 
       - secrets
-      - componentstatuses
       - configmaps
-      - daemonsets
-      - deployments
-      - events
-      - endpoints
-      - horizontalpodautoscalers
-      - ingress
-      - jobs
-      - limitranges
-      - namespaces
-      - nodes
-      - pods
-      - persistentvolumes
       - persistentvolumeclaims
-      - resourcequotas
-      - replicasets
-      - replicationcontrollers
-      - serviceaccounts
       - services
-    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+      - pods
+    verbs: ["get", "list", "watch", "create", "update", "delete", "patch"]
+  - apiGroups: ["apps"]
+    resources: 
+      - deployment
+      - replicasets
+    verbs: ["get", "list", "watch", "create", "update", "delete", "patch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources:
+      - ingress
+    verbs: ["get", "list", "watch", "create", "update", "delete", "patch"]
 ```
 
 ### Bind the role to service account
@@ -84,7 +69,16 @@ metadata:
   name: persistent-volume-access
 rules:
   - apiGroups: [""]
-    resources: ["persistentvolumes"]
+    resources:
+      - persistentvolumes
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: 
+      - storageclasses
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["cert-manager.io"]
+    resources: 
+      - clusterissuers
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 
 ```
