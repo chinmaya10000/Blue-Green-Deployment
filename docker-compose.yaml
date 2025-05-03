@@ -6,8 +6,8 @@ services:
     container_name: mysql
     ports:
       - "3306:3306"
-    networks:
-      - bankapp-network
+    # networks:
+    #   - bankapp-network
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PWD}
       MYSQL_DATABASE: ${DB_NAME}
@@ -24,8 +24,8 @@ services:
     image: chinmayapradhan/bankapp:1.0
     ports:
       - "8080:8080"
-    networks:
-      - bankapp-network
+    # networks:
+    #   - bankapp-network
     environment:
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/bankappdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
@@ -35,9 +35,9 @@ services:
         condition: service_healthy
 
 
-networks:
-  bankapp-network:
-    driver: bridge
+# networks:
+#   bankapp-network:
+#     driver: bridge
 
 volumes:
   mysql-data:
