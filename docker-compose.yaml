@@ -21,7 +21,10 @@ services:
 
   bankapp:
     container_name: bankapp
-    image: chinmayapradhan/bankapp:1.0
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    # image: chinmayapradhan/bankapp:1.0
     ports:
       - "8080:8080"
     # networks:
