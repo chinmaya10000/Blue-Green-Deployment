@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql 
+  namespace: webapp
+spec:
+  serviceName: "mysql"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8 
+        ports:
+        - containerPort: 3306
+          name: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: db_root_password
+              name: db-secret
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              key: db_name
+              name: db-secret
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql 
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+  
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-data 
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "gp2"
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service 
+metadata:
+  name: mysql
+  namespace: webapp
+spec:
+  clusterIP: None
+  ports:
+  - port: 3306
+    name: mysql 
+  selector:
+    app: mysql
