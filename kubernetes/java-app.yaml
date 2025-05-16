@@ -34,7 +34,7 @@ spec:
         - name: SPRING_DATASOURCE_PASSWORD
           valueFrom:
             secretKeyRef:
-              key: db_password
+              key: db_root_password
               name: db-secret
         resources:
           requests:
