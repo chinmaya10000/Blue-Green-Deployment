@@ -59,3 +59,14 @@ spec:
   type: LoadBalancer
 
             
+
+# kubectl rollout restart deployment java-app-deployment -n webapp  -- restart the pod
+# kubectl rollout undo deployment java-app-deployment -n webapp -- undo the last rollout
+# kubectl rollout history deployment java-app-deployment -n webapp -- show the rollout history
+# kubectl exec -it mysql-0 -n webapp -- df -h | grep /var/lib/mysql -- check the disk space
+# kubectl exec -it mysql-0 -n webapp -- du -sh /var/lib/mysql -- check the size of the mysql data directory
+# kubectl -n webapp exec -it java-app-deployment-ccc4b6c75-c87pl -- wget -q -O - http://localhost:8080/login -- check the health of the java app
+# kubernetes]$ kubectl run mysql-client -it --rm --restart=Never --image=mysql:8 -n webapp -- mysql -h mysql -u root -pTest@123 -- check the mysql connection
+# kubectl -n webapp describe pod mysql-0 | grep -A10 "Mounts" -- check the mounts
+# kubectl get endpoints java-app-service -n webapp -o wide -- check the endpoints
+ 
